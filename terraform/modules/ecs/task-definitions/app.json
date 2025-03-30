@@ -1,0 +1,87 @@
+{
+  "family": "${project_name}-app",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "${task_cpu}",
+  "memory": "${task_memory}",
+  "executionRoleArn": "${ecs_task_execution_role_arn}",
+  "taskRoleArn": "${ecs_task_role_arn}",
+  "containerDefinitions": [
+    {
+      "name": "frontend",
+      "image": "${frontend_image}:${container_tag}",
+      "essential": true,
+      "memoryReservation": 128,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3
+      },
+      "logConfiguration": {
+        "logDriver": "awsfirelens",
+        "options": {
+          "Name": "cloudwatch",
+          "region": "${aws_region}",
+          "log_group_name": "/ecs/${project_name}",
+          "log_stream_prefix": "frontend-"
+        }
+      }
+    },
+    {
+      "name": "backend",
+      "image": "${backend_image}:${container_tag}",
+      "essential": true,
+      "memoryReservation": 256,
+      "portMappings": [
+        {
+          "containerPort": 4000,
+          "protocol": "tcp"
+        }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:4000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3
+      },
+      "environment": ${jsonencode(container_environment)},
+      "secrets": ${jsonencode(container_secrets)},
+      "logConfiguration": {
+        "logDriver": "awsfirelens",
+        "options": {
+          "Name": "cloudwatch",
+          "region": "${aws_region}",
+          "log_group_name": "/ecs/${project_name}",
+          "log_stream_prefix": "backend-"
+        }
+      }
+    },
+    {
+      "name": "log-router",
+      "image": "public.ecr.aws/aws-observability/aws-for-fluent-bit:latest",
+      "essential": true,
+      "memoryReservation": 50,
+      "firelensConfiguration": {
+        "type": "fluentbit",
+        "options": {
+          "enable-ecs-log-metadata": "true"
+        }
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/${project_name}",
+          "awslogs-region": "${aws_region}",
+          "awslogs-stream-prefix": "firelens"
+        }
+      }
+    }
+  ]
+}

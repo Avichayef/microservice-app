@@ -1,0 +1,54 @@
+# Development environment configuration for multi-service application
+# Services:
+# - Frontend: React/Next.js application (port 3000)
+# - Backend: Node.js/Express API (port 4000)
+# - Database: PostgreSQL instance
+# - Fluent-bit: Sidecar container for log aggregation
+#
+# Usage:
+# - Development: docker-compose up
+# - Testing: docker-compose up -d
+# - Cleanup: docker-compose down -v
+
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://backend:4000
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/app
+      - JWT_SECRET=your-secret-key
+    depends_on:
+      - db
+
+  db:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=app
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  fluent-bit:
+    image: fluent/fluent-bit:latest
+    volumes:
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    environment:
+      - AWS_REGION=${AWS_REGION}
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  postgres_data:

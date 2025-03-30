@@ -1,0 +1,156 @@
+# Main CI/CD Pipeline
+# This workflow handles the complete CI/CD process including:
+# - Running tests
+# - Security scanning (tfsec for Terraform, hadolint for Dockerfiles)
+# - Building and pushing Docker images to ECR
+# - Deploying infrastructure with Terraform
+# - Deploying to ECS with zero downtime
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AWS_REGION: us-east-1
+  PROJECT_NAME: microservice-app
+
+permissions:
+  id-token: write   # Required for OIDC
+  contents: read    # Required for checkout
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          cd frontend && npm install
+          cd ../backend && npm install
+
+      - name: Run unit tests
+        run: |
+          cd frontend && npm test
+          cd ../backend && npm test
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Scan Terraform code for security issues
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: terraform
+
+      # Scan Dockerfiles for best practices and security issues
+      - name: Run hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: |
+            frontend/Dockerfile
+            backend/Dockerfile
+
+  build-and-push:
+    name: Build and Push Images
+    needs: [test, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+
+      # Configure AWS credentials using OIDC
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/microservice-app-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Create bootstrap resources if they don't exist
+      - name: Check/Create Bootstrap Resources
+        run: |
+          chmod +x ./scripts/bootstrap.sh
+          ./scripts/bootstrap.sh
+
+      # Login to ECR for pushing images
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # Build and push Docker images with SHA tags
+      - name: Build and push images
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build and push frontend
+          docker build -t $ECR_REGISTRY/${{ env.PROJECT_NAME }}-frontend:$IMAGE_TAG ./frontend
+          docker push $ECR_REGISTRY/${{ env.PROJECT_NAME }}-frontend:$IMAGE_TAG
+          
+          # Build and push backend
+          docker build -t $ECR_REGISTRY/${{ env.PROJECT_NAME }}-backend:$IMAGE_TAG ./backend
+          docker push $ECR_REGISTRY/${{ env.PROJECT_NAME }}-backend:$IMAGE_TAG
+
+  terraform:
+    name: Terraform
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+
+      # Configure AWS credentials for Terraform
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/microservice-app-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform
+        run: terraform plan -var="container_tag=${{ github.sha }}" -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve tfplan
+
+  deploy:
+    name: Deploy to ECS
+    needs: terraform
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/microservice-app-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Update ECS service with zero-downtime deployment
+      - name: Update ECS Service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.PROJECT_NAME }}-cluster \
+            --service ${{ env.PROJECT_NAME }}-service \
+            --force-new-deployment
