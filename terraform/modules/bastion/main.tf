@@ -27,7 +27,6 @@ resource "aws_security_group" "bastion" {
   }
 }
 
-# Bastion Host
 resource "aws_instance" "bastion" {
   ami           = var.ami_id
   instance_type = var.instance_type
@@ -36,19 +35,6 @@ resource "aws_instance" "bastion" {
 
   vpc_security_group_ids = [aws_security_group.bastion.id]
   iam_instance_profile   = var.instance_profile_name
-
-  root_block_device {
-    volume_size = 20
-    encrypted   = true
-  }
-
-  metadata_options {
-    http_tokens = "required" # IMDSv2
-  }
-
-  tags = {
-    Name = "${var.project_name}-bastion"
-  }
 
   # User data script for hardening
   user_data = <<-EOF
@@ -70,27 +56,8 @@ resource "aws_instance" "bastion" {
               systemctl enable amazon-ssm-agent
               systemctl start amazon-ssm-agent
               EOF
-}
-
-# CloudWatch Log Group for Bastion
-resource "aws_cloudwatch_log_group" "bastion" {
-  name              = "/aws/bastion/${var.project_name}"
-  retention_in_days = 30
 
   tags = {
-    Name = "${var.project_name}-bastion-logs"
+    Name = "${var.project_name}-bastion"
   }
-}
-
-# Add missing variable defaults
-variable "ami_id" {
-  description = "AMI ID for the bastion host"
-  type        = string
-  default     = "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI ID
-}
-
-variable "instance_type" {
-  description = "Instance type for the bastion host"
-  type        = string
-  default     = "t3.micro"
 }

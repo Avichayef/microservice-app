@@ -23,7 +23,6 @@ module "ecr" {
   source = "./modules/ecr"
 
   project_name = var.project_name
-  # Missing required variable
   allowed_account_ids = var.allowed_account_ids
 }
 
@@ -68,7 +67,6 @@ module "alb" {
   log_bucket        = module.logging.log_bucket_id
 }
 
-# Add logging module
 module "logging" {
   source = "./modules/logging"
 
@@ -76,7 +74,6 @@ module "logging" {
   retention_days = var.log_retention_days
 }
 
-# Updated ECS module configuration for multi-container setup
 module "ecs" {
   source = "./modules/ecs"
 
@@ -87,7 +84,6 @@ module "ecs" {
   alb_security_group_id = module.alb.security_group_id
   alb_target_group_arn = module.alb.target_group_arn
   
-  # Use backend as the primary container
   container_image      = module.ecr.backend_repository_url
   container_port       = var.backend_port
   
@@ -116,30 +112,6 @@ module "ecs" {
       valueFrom = "${module.secrets.secret_arn}:JWT_SECRET::"
     }
   ]
-}
-
-# Add outputs for important resources
-output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
-  value       = module.alb.alb_dns_name
-}
-
-output "ecs_cluster_name" {
-  description = "Name of the ECS cluster"
-  value       = module.ecs.cluster_name
-}
-
-output "bastion_public_ip" {
-  description = "Public IP of the bastion host"
-  value       = module.bastion.public_ip
-}
-
-output "ecr_repository_urls" {
-  description = "URLs of the ECR repositories"
-  value = {
-    frontend = module.ecr.frontend_repository_url
-    backend  = module.ecr.backend_repository_url
-  }
 }
 
 module "github_oidc" {

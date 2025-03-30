@@ -13,10 +13,14 @@ variable "public_subnet_ids" {
   type        = list(string)
 }
 
+variable "certificate_arn" {
+  description = "ARN of ACM certificate for HTTPS listener"
+  type        = string
+}
+
 variable "container_port" {
   description = "Port the container listens on"
   type        = number
-  default     = 8080
 }
 
 variable "health_check_path" {
@@ -25,13 +29,18 @@ variable "health_check_path" {
   default     = "/health"
 }
 
-variable "log_bucket" {
-  description = "S3 bucket name for ALB access logs"
-  type        = string
-}
-
 variable "allowed_cidr_blocks" {
   description = "List of CIDR blocks allowed to access the ALB"
   type        = list(string)
-  default     = ["10.0.0.0/16"] # Your VPC CIDR - adjust as needed
+  default     = ["0.0.0.0/0"]
+}
+
+variable "waf_acl_arn" {
+  description = "ARN of WAF ACL to associate with ALB"
+  type        = string
+}
+
+variable "log_bucket" {
+  description = "S3 bucket for ALB access logs"
+  type        = string
 }

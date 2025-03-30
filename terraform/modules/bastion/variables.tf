@@ -1,22 +1,22 @@
 variable "project_name" {
-  description = "Name of the project"
+  description = "Project name for resource naming"
   type        = string
 }
 
 variable "vpc_id" {
-  description = "ID of the VPC"
+  description = "VPC ID where bastion will be created"
   type        = string
 }
 
-variable "allowed_ip" {
-  description = "CIDR block for allowed SSH access"
+variable "public_subnet_id" {
+  description = "Public subnet ID for bastion host"
   type        = string
 }
 
 variable "ami_id" {
   description = "AMI ID for bastion host"
   type        = string
-  default     = "ami-0cff7528ff583bf9a"  # Amazon Linux 2
+  default     = null  # Will be looked up if not provided
 }
 
 variable "instance_type" {
@@ -25,17 +25,17 @@ variable "instance_type" {
   default     = "t3.micro"
 }
 
-variable "public_subnet_id" {
-  description = "ID of public subnet for bastion host"
+variable "key_name" {
+  description = "SSH key name for bastion access"
   type        = string
 }
 
-variable "key_name" {
-  description = "Name of SSH key pair"
+variable "allowed_ip" {
+  description = "IP address allowed to connect to bastion"
   type        = string
 }
 
 variable "instance_profile_name" {
-  description = "Name of instance profile for bastion host"
+  description = "IAM instance profile name for bastion"
   type        = string
 }

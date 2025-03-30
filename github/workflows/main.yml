@@ -64,8 +64,8 @@ jobs:
             frontend/Dockerfile
             backend/Dockerfile
 
-  create-monitoring:
-    name: Create Monitoring Infrastructure
+  terraform-bootstrap:
+    name: Bootstrap Terraform State
     needs: [test, security-scan]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
@@ -83,40 +83,15 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: Create Monitoring Module
+      - name: Initialize and Apply Bootstrap
+        working-directory: terraform/bootstrap
         run: |
-          mkdir -p terraform/modules/monitoring
-          cat > terraform/modules/monitoring/main.tf << 'EOF'
-          # Monitoring module content here
-          EOF
-          cat > terraform/modules/monitoring/variables.tf << 'EOF'
-          # Variables content here
-          EOF
-
-      - name: Create Architecture Diagram
-        run: |
-          mkdir -p docs
-          cat > docs/architecture.md << 'EOF'
-          # Architecture content here
-          EOF
-
-      - name: Create Fluent Bit Config
-        run: |
-          cat > fluent-bit.conf << 'EOF'
-          # Fluent Bit config content here
-          EOF
-
-      - name: Commit Changes
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add .
-          git commit -m "Add monitoring infrastructure and documentation"
-          git push
+          terraform init
+          terraform apply -auto-approve
 
   build-and-push:
     name: Build and Push Images
-    needs: create-monitoring
+    needs: terraform-bootstrap
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
