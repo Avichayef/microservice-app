@@ -1,13 +1,17 @@
 {
-  "name": "microservice-app",
+  "name": "frontend",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
   "scripts": {
-    "test": "npm run test --workspaces",
-    "install-all": "npm install && npm install --workspace frontend && npm install --workspace backend"
+    "test": "jest"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "14.0.0",
+    "@testing-library/jest-dom": "6.0.0",
+    "jest": "29.0.0"
   }
 }
