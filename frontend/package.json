@@ -1,0 +1,13 @@
+{
+  "name": "microservice-app",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces",
+    "install-all": "npm install && npm install --workspace frontend && npm install --workspace backend"
+  }
+}
