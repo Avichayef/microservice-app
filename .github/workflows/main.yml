@@ -18,32 +18,50 @@ env:
   AWS_REGION: us-east-1
   PROJECT_NAME: microservice-app
 
-permissions:
-  id-token: write   # Required for OIDC
-  contents: read    # Required for checkout
-
 jobs:
-  test:
-    name: Run Tests
+  frontend-test:
+    name: Frontend Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v3
-
+      
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
           cache: 'npm'
-
+          cache-dependency-path: 'frontend/package-lock.json'
+      
       - name: Install dependencies
-        run: |
-          cd frontend && npm install
-          cd ../backend && npm install
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test
 
-      - name: Run unit tests
-        run: |
-          cd frontend && npm test
-          cd ../backend && npm test
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test
 
   security-scan:
     name: Security Scanning
@@ -67,7 +85,7 @@ jobs:
 
   build-and-push:
     name: Build and Push Images
-    needs: [test, security-scan]
+    needs: [frontend-test, backend-test, security-scan]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
