@@ -50,6 +50,7 @@ resource "aws_security_group" "ecs_tasks" {
   vpc_id      = var.vpc_id
 
   ingress {
+    description     = "Allow inbound traffic from ALB"
     from_port       = var.container_port
     to_port         = var.container_port
     protocol        = "tcp"
@@ -57,6 +58,7 @@ resource "aws_security_group" "ecs_tasks" {
   }
 
   egress {
+    description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"

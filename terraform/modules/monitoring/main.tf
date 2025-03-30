@@ -14,18 +14,17 @@ resource "aws_cloudwatch_log_group" "ecs_logs" {
   }
 }
 
-# CPU Utilization Alarm
-resource "aws_cloudwatch_metric_alarm" "cpu_high" {
-  alarm_name          = "${var.project_name}-cpu-utilization-high"
+resource "aws_cloudwatch_metric_alarm" "ecs_cpu" {
+  alarm_name          = "${var.project_name}-ecs-cpu-utilization"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "2"
-  metric_name        = "CPUUtilization"
+  metric_name         = "CPUUtilization"
   namespace          = "AWS/ECS"
   period             = "300"
   statistic          = "Average"
-  threshold          = "85"
-  alarm_description  = "CPU utilization is too high"
-  alarm_actions      = [var.sns_topic_arn]
+  threshold          = "80"
+  alarm_description  = "This metric monitors ECS CPU utilization"
+  alarm_actions      = [aws_sns_topic.alerts.arn]
 
   dimensions = {
     ClusterName = var.ecs_cluster_name
@@ -33,18 +32,17 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   }
 }
 
-# Memory Utilization Alarm
-resource "aws_cloudwatch_metric_alarm" "memory_high" {
-  alarm_name          = "${var.project_name}-memory-utilization-high"
+resource "aws_cloudwatch_metric_alarm" "ecs_memory" {
+  alarm_name          = "${var.project_name}-ecs-memory-utilization"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "2"
-  metric_name        = "MemoryUtilization"
+  metric_name         = "MemoryUtilization"
   namespace          = "AWS/ECS"
   period             = "300"
   statistic          = "Average"
-  threshold          = "85"
-  alarm_description  = "Memory utilization is too high"
-  alarm_actions      = [var.sns_topic_arn]
+  threshold          = "80"
+  alarm_description  = "This metric monitors ECS memory utilization"
+  alarm_actions      = [aws_sns_topic.alerts.arn]
 
   dimensions = {
     ClusterName = var.ecs_cluster_name
@@ -52,20 +50,23 @@ resource "aws_cloudwatch_metric_alarm" "memory_high" {
   }
 }
 
-# HTTP 5XX Error Rate Alarm
-resource "aws_cloudwatch_metric_alarm" "http_5xx" {
-  alarm_name          = "${var.project_name}-5xx-error-rate"
+resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
+  alarm_name          = "${var.project_name}-alb-5xx-errors"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "2"
-  metric_name        = "HTTPCode_Target_5XX_Count"
+  metric_name         = "HTTPCode_Target_5XX_Count"
   namespace          = "AWS/ApplicationELB"
   period             = "300"
   statistic          = "Sum"
   threshold          = "10"
-  alarm_description  = "HTTP 5XX error rate is too high"
-  alarm_actions      = [var.sns_topic_arn]
+  alarm_description  = "This metric monitors ALB 5XX errors"
+  alarm_actions      = [aws_sns_topic.alerts.arn]
 
   dimensions = {
     LoadBalancer = var.alb_arn_suffix
   }
+}
+
+resource "aws_sns_topic" "alerts" {
+  name = "${var.project_name}-alerts"
 }

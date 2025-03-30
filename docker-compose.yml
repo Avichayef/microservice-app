@@ -18,7 +18,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - API_URL=http://backend:4000
+      - BACKEND_URL=http://backend:4000
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: frontend.logs
     depends_on:
       - backend
 
@@ -27,28 +32,33 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/app
-      - JWT_SECRET=your-secret-key
+      - DATABASE_URL=postgresql://db:5432/app
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: backend.logs
     depends_on:
       - db
 
   db:
     image: postgres:14-alpine
     environment:
-      - POSTGRES_PASSWORD=password
       - POSTGRES_DB=app
+      - POSTGRES_USER=appuser
+      - POSTGRES_PASSWORD=localdev
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   fluent-bit:
-    image: fluent/fluent-bit:latest
+    image: fluent/fluent-bit
     volumes:
       - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
-    environment:
-      - AWS_REGION=${AWS_REGION}
+    ports:
+      - "24224:24224"
     depends_on:
-      - backend
       - frontend
+      - backend
 
 volumes:
   postgres_data:

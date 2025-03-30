@@ -1,16 +1,11 @@
-variable "project_name" {
-  description = "Name of the project for resource naming"
-  type        = string
-}
-
 variable "log_retention_days" {
   description = "Number of days to retain CloudWatch logs"
   type        = number
   default     = 30
 }
 
-variable "sns_topic_arn" {
-  description = "ARN of the SNS topic for alarm notifications"
+variable "project_name" {
+  description = "Name of the project for resource naming"
   type        = string
 }
 

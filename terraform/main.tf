@@ -151,3 +151,12 @@ module "github_oidc" {
   terraform_state_bucket_arn = "arn:aws:s3:::${var.state_bucket_name}"
   terraform_lock_table_arn   = "arn:aws:dynamodb:::table/${var.state_lock_table_name}"
 }
+
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  project_name     = var.project_name
+  ecs_cluster_name = module.ecs.cluster_name
+  ecs_service_name = module.ecs.service_name
+  alb_arn_suffix   = module.alb.alb_arn_suffix
+}
