@@ -23,11 +23,7 @@ resource "aws_iam_role" "github_actions" {
             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
           }
           StringLike = {
-            "token.actions.githubusercontent.com:sub": [
-              "repo:avichayef/microservice-app:ref:refs/heads/main",
-              "repo:avichayef/microservice-app:ref:refs/heads/master",
-              "repo:avichayef/microservice-app:pull_request"
-            ]
+            "token.actions.githubusercontent.com:sub": "repo:avichayef/microservice-app:*"
           }
         }
       }
