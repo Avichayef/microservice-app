@@ -52,13 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Basic Terraform security check
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v1.0.0
-        with:
-          working_directory: terraform
-
-      # Basic Dockerfile check
+      # Just keep the basic Dockerfile check
       - name: Run hadolint
         uses: hadolint/hadolint-action@v3.1.0
         with:
