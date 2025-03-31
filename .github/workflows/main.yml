@@ -35,7 +35,12 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/microservice-app-github-actions-role
           aws-region: us-east-1
+          audience: sts.amazonaws.com
           role-duration-seconds: 900
+
+      - name: Verify AWS Identity
+        run: |
+          aws sts get-caller-identity
 
       # Add your other deployment steps here
       - name: Setup Terraform
