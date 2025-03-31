@@ -8,11 +8,9 @@
 
 name: CI/CD Pipeline
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+permissions:
+  id-token: write
+  contents: read
 
 env:
   AWS_REGION: us-east-1
@@ -98,7 +96,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role  # Note: this should match the role name in bootstrap/oidc.tf
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GithubActionsSession
           mask-aws-account-id: true
@@ -140,7 +138,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GithubActionsSession
           mask-aws-account-id: true
@@ -169,7 +167,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GithubActionsSession
           mask-aws-account-id: true

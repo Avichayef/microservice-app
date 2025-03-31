@@ -21,7 +21,7 @@ resource "aws_iam_role" "github_actions" {
         Condition = {
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main"
+            "token.actions.githubusercontent.com:sub" = "repo:${var.github_org}/microservice-app:ref:refs/heads/main"
           }
         }
       }
@@ -29,17 +29,43 @@ resource "aws_iam_role" "github_actions" {
   })
 }
 
-# Attach required policies to the role
-resource "aws_iam_role_policy_attachment" "github_actions_ecr" {
-  role       = aws_iam_role.github_actions.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonECR_FullAccess"
+# Instead of using the full access policy, create a specific ECR policy
+resource "aws_iam_role_policy" "ecr_access" {
+  name = "ecr-access"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetRepositoryPolicy",
+          "ecr:DescribeRepositories",
+          "ecr:ListImages",
+          "ecr:DescribeImages",
+          "ecr:BatchGetImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:PutImage"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 }
 
+# Keep the ECS policy attachment
 resource "aws_iam_role_policy_attachment" "github_actions_ecs" {
   role       = aws_iam_role.github_actions.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
 }
 
+# Keep your existing terraform access policy
 resource "aws_iam_role_policy" "terraform_access" {
   name = "terraform-access"
   role = aws_iam_role.github_actions.id
