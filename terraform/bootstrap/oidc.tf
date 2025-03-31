@@ -7,7 +7,7 @@ resource "aws_iam_openid_connect_provider" "github_actions" {
 
 # Create IAM Role for GitHub Actions
 resource "aws_iam_role" "github_actions" {
-  name = "github-actions-role"
+  name = "${var.project_name}-github-actions-role"  # Match the role name used in workflow
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -19,9 +19,13 @@ resource "aws_iam_role" "github_actions" {
           Federated = aws_iam_openid_connect_provider.github_actions.arn
         }
         Condition = {
-          StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_org}/microservice-app:ref:refs/heads/main"
+          StringLike = {
+            "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+            "token.actions.githubusercontent.com:sub": [
+              "repo:${var.github_org}/${var.project_name}:*",
+              "repo:${var.github_org}/${var.project_name}:ref:refs/heads/main",
+              "repo:${var.github_org}/${var.project_name}:pull_request"
+            ]
           }
         }
       }
