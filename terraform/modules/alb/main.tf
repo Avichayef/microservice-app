@@ -26,6 +26,7 @@ resource "aws_security_group" "alb" {
 }
 
 resource "aws_security_group_rule" "https_ingress" {
+  #tfsec:ignore:aws-vpc-no-public-ingress-sgr
   type              = "ingress"
   from_port         = 443
   to_port           = 443
@@ -36,6 +37,7 @@ resource "aws_security_group_rule" "https_ingress" {
 }
 
 resource "aws_security_group_rule" "http_ingress" {
+  #tfsec:ignore:aws-vpc-no-public-ingress-sgr
   type              = "ingress"
   from_port         = 80
   to_port           = 80
