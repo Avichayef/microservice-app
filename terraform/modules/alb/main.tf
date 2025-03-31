@@ -1,5 +1,37 @@
 # Application Load Balancer Module
 
+# Security group for ALB
+resource "aws_security_group" "alb" {
+  name        = "${var.project_name}-alb-sg"
+  description = "Security group for ALB"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = var.allowed_cidr_blocks
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = var.allowed_cidr_blocks
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-alb-sg"
+  }
+}
+
 resource "aws_lb" "main" {
   name               = "${var.project_name}-alb"
   internal           = false
@@ -8,6 +40,11 @@ resource "aws_lb" "main" {
   subnets           = var.public_subnet_ids
 
   enable_deletion_protection = true
+
+  access_logs {
+    bucket  = var.log_bucket
+    enabled = true
+  }
 
   tags = {
     Name = "${var.project_name}-alb"
@@ -31,10 +68,4 @@ resource "aws_lb_target_group" "app" {
   }
 }
 
-# Add access logging for ALB
-resource "aws_lb_logging" "main" {
-  load_balancer_arn = aws_lb.main.arn
-  bucket            = var.log_bucket
-  enabled           = true
-}
 

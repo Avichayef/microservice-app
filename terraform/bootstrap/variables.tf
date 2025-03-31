@@ -7,18 +7,6 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "environment" {
-  description = "Environment name (e.g., prod, staging, dev)"
-  type        = string
-  default     = "prod"
-}
-
-variable "project_name" {
-  description = "Name of the project, used for resource naming and tagging"
-  type        = string
-  default     = "microservice-app"
-}
-
 variable "state_bucket_name" {
   description = "Name of the S3 bucket for Terraform state storage"
   type        = string

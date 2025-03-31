@@ -63,8 +63,8 @@ module "alb" {
   certificate_arn   = var.certificate_arn
   container_port    = var.backend_port
   health_check_path = "/health"
-  waf_acl_arn       = module.security.waf_acl_arn
   log_bucket        = module.logging.log_bucket_id
+  allowed_cidr_blocks = ["0.0.0.0/0"]  # Consider restricting this in production
 }
 
 module "logging" {

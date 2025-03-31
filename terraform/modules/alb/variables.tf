@@ -29,18 +29,13 @@ variable "health_check_path" {
   default     = "/health"
 }
 
+variable "log_bucket" {
+  description = "S3 bucket for ALB access logs"
+  type        = string
+}
+
 variable "allowed_cidr_blocks" {
   description = "List of CIDR blocks allowed to access the ALB"
   type        = list(string)
   default     = ["0.0.0.0/0"]
-}
-
-variable "waf_acl_arn" {
-  description = "ARN of WAF ACL to associate with ALB"
-  type        = string
-}
-
-variable "log_bucket" {
-  description = "S3 bucket for ALB access logs"
-  type        = string
 }
