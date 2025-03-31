@@ -29,11 +29,12 @@ variable "public_subnet_ids" {
 }
 
 variable "certificate_arn" {
-  description = "ARN of ACM certificate for HTTPS listener"
+  description = "ARN of ACM certificate for ALB HTTPS listener"
   type        = string
+  default     = null  # Make it optional
 
   validation {
-    condition     = can(regex("^arn:aws:acm:", var.certificate_arn))
+    condition     = var.certificate_arn == null || can(regex("^arn:aws:acm:", var.certificate_arn))
     error_message = "Certificate ARN must be a valid ACM certificate ARN."
   }
 }
