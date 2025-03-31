@@ -15,11 +15,9 @@ GITHUB_REPO=$(echo $GITHUB_REPO_URL | sed -n 's/.*github.com[:/][^/]*\/\([^.]*\)
 # Run bootstrap Terraform
 cd "$PROJECT_ROOT/terraform/bootstrap"
 
-# Initialize Terraform
-terraform init
-
-# Apply Terraform configuration with GitHub variables
-terraform apply -auto-approve \
+# Use the full path to terraform
+/usr/local/bin/terraform init
+/usr/local/bin/terraform apply -auto-approve \
   -var="github_org=$GITHUB_ORG" \
   -var="github_repo=$GITHUB_REPO"
 

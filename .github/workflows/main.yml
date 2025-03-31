@@ -36,6 +36,12 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
+      - name: Verify Terraform Installation
+        run: |
+          terraform version
+          which terraform
+          echo "Terraform is installed at: $(which terraform)"
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
