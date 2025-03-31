@@ -19,16 +19,11 @@ resource "aws_iam_role" "github_actions" {
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
+          StringLike = {
+            "token.actions.githubusercontent.com:sub": "repo:avichayef/microservice-app:*"
+          }
           StringEquals = {
             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-          }
-          StringLike = {
-            "token.actions.githubusercontent.com:sub": [
-              "repo:avichayef/microservice-app:*",
-              "repo:avichayef/microservice-app:ref:refs/heads/*",
-              "repo:avichayef/microservice-app:pull_request",
-              "repo:avichayef/microservice-app:environment:*"
-            ]
           }
         }
       }

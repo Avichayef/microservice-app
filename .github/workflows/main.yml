@@ -15,6 +15,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  AWS_REGION: us-east-1
+  PROJECT_NAME: microservice-app
+
 permissions:
   id-token: write
   contents: read
@@ -31,7 +35,8 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/microservice-app-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
-          role-session-name: GithubActionsSession
+          role-duration-seconds: 900
+          mask-aws-account-id: true
 
       - name: Run Bootstrap Script
         run: |
