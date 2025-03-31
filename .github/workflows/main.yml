@@ -57,9 +57,6 @@ jobs:
       - name: Terraform Plan
         run: |
           cd terraform
-          # Enable debug output
-          export TF_LOG=DEBUG
-          
           terraform plan \
             -var="project_name=${{ env.PROJECT_NAME }}" \
             -var="aws_region=${{ env.AWS_REGION }}" \
@@ -73,6 +70,9 @@ jobs:
             -var="database_url=${{ secrets.DATABASE_URL }}" \
             -var="api_key=${{ secrets.API_KEY }}" \
             -var="jwt_secret=${{ secrets.JWT_SECRET }}" \
+            -var="bastion_allowed_ip=0.0.0.0/0" \
+            -var="ssh_key_name=${{ secrets.SSH_KEY_NAME }}" \
+            -var="certificate_arn=${{ secrets.CERTIFICATE_ARN }}" \
             -out=tfplan
 
       - name: Terraform Apply
