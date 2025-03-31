@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: us-east-1  # First reference
   PROJECT_NAME: microservice-app
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/microservice-app-github-actions-role
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}  # Use environment variable instead of hardcoded value
           audience: sts.amazonaws.com
           role-duration-seconds: 900
 

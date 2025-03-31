@@ -5,7 +5,6 @@
 provider "aws" {
   region = var.aws_region
   
-  # Default tags are automatically applied to all resources that support tagging
   default_tags {
     tags = {
       Environment = var.environment

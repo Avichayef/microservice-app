@@ -13,10 +13,10 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "terraform-state-microservice-app"  # Must match state_bucket_name variable
+    bucket         = "terraform-state-microservice-app"
     key            = "prod/terraform.tfstate"
-    region         = "us-east-1"                        # Must match aws_region variable
-    dynamodb_table = "terraform-state-lock"             # Must match state_lock_table_name variable
+    region         = "us-east-1"
+    dynamodb_table = "terraform-state-lock"
     encrypt        = true
   }
 }
