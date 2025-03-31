@@ -39,8 +39,11 @@ module "secrets" {
 module "security" {
   source = "./modules/security"
 
-  project_name = var.project_name
-  secrets_arn  = module.secrets.secret_arn
+  project_name   = var.project_name
+  secrets_arn    = module.secrets.secret_arn
+  aws_account_id = var.aws_account_id
+  github_org     = var.github_org
+  github_repo    = var.github_repo
 }
 
 module "bastion" {
