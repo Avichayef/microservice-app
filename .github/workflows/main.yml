@@ -73,6 +73,8 @@ jobs:
             -var="bastion_allowed_ip=0.0.0.0/0" \
             -var="ssh_key_name=${{ secrets.SSH_KEY_NAME }}" \
             -var="certificate_arn=${{ secrets.CERTIFICATE_ARN }}" \
+            -var="github_org=${{ secrets.GITHUB_ORG }}" \
+            -var="github_repo=${{ github.event.repository.name }}" \
             -out=tfplan
 
       - name: Terraform Apply
