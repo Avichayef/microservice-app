@@ -4,11 +4,14 @@
   "private": true,
   "scripts": {
     "start": "react-scripts start",
-    "test": "jest"
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
