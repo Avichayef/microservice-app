@@ -15,32 +15,26 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-permissions:
-  id-token: write
-  contents: read
-
 env:
   AWS_REGION: us-east-1
   PROJECT_NAME: microservice-app
-  TERRAFORM_VERSION: "1.5.0"  # Specify your desired Terraform version
+  TERRAFORM_VERSION: "1.5.0"
 
 jobs:
-  bootstrap:
+  bootstrap:  # This runs first
     name: Bootstrap Infrastructure
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
+      # FIXED: Proper Terraform setup
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Verify Terraform Installation
-        run: |
-          terraform version
-          which terraform
-          echo "Terraform is installed at: $(which terraform)"
+        run: terraform version
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -120,7 +114,7 @@ jobs:
             backend/Dockerfile
           failure-threshold: error  # Only fail on errors, not warnings
 
-  build-and-push:
+  build-and-push:  # This runs later
     name: Build and Push Images
     needs: [frontend-test, backend-test, security-scan]
     runs-on: ubuntu-latest
@@ -136,12 +130,6 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GithubActionsSession
           mask-aws-account-id: true
-
-      # Create bootstrap resources if they don't exist
-      - name: Check/Create Bootstrap Resources
-        run: |
-          chmod +x ./scripts/bootstrap.sh
-          ./scripts/bootstrap.sh
 
       # Login to ECR for pushing images
       - name: Login to Amazon ECR
