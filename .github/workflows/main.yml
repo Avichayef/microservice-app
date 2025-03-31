@@ -98,9 +98,10 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-github-actions-role
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role
           aws-region: ${{ env.AWS_REGION }}
-          audience: sts.amazonaws.com
+          role-session-name: GithubActionsSession
+          mask-aws-account-id: true
 
       # Create bootstrap resources if they don't exist
       - name: Check/Create Bootstrap Resources
@@ -139,9 +140,10 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-github-actions-role
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role
           aws-region: ${{ env.AWS_REGION }}
-          audience: sts.amazonaws.com
+          role-session-name: GithubActionsSession
+          mask-aws-account-id: true
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -167,9 +169,10 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-github-actions-role
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role
           aws-region: ${{ env.AWS_REGION }}
-          audience: sts.amazonaws.com
+          role-session-name: GithubActionsSession
+          mask-aws-account-id: true
 
       # Update ECS service with zero-downtime deployment
       - name: Update ECS Service

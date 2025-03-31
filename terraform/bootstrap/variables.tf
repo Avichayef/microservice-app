@@ -18,3 +18,13 @@ variable "state_lock_table_name" {
   type        = string
   default     = "terraform-state-lock"
 }
+
+variable "github_org" {
+  description = "GitHub organization name"
+  type        = string
+}
+
+variable "github_repo" {
+  description = "GitHub repository name"
+  type        = string
+}

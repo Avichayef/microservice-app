@@ -7,28 +7,20 @@ PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 
 echo "Starting bootstrap process..."
 
-# Check AWS CLI configuration
-if ! aws sts get-caller-identity &>/dev/null; then
-    echo "Error: AWS CLI not configured. Please run 'aws configure' first."
-    exit 1
-fi
+# Get GitHub repository information from git config
+GITHUB_REPO_URL=$(git config --get remote.origin.url)
+GITHUB_ORG=$(echo $GITHUB_REPO_URL | sed -n 's/.*github.com[:/]\([^/]*\).*/\1/p')
+GITHUB_REPO=$(echo $GITHUB_REPO_URL | sed -n 's/.*github.com[:/][^/]*\/\([^.]*\).*/\1/p')
 
-# Check if state bucket exists
-if ! aws s3 ls "s3://terraform-state-microservice-app" 2>&1 > /dev/null; then
-    echo "Bootstrap state bucket not found. Creating bootstrap resources..."
-    
-    # Run bootstrap Terraform
-    cd "$PROJECT_ROOT/terraform/bootstrap"
-    
-    # Initialize Terraform
-    terraform init
-    
-    # Apply Terraform configuration
-    terraform apply -auto-approve
-    
-    echo "Bootstrap complete. State bucket and DynamoDB table created."
-else
-    echo "Bootstrap resources already exist. Proceeding with main deployment."
-fi
+# Run bootstrap Terraform
+cd "$PROJECT_ROOT/terraform/bootstrap"
+
+# Initialize Terraform
+terraform init
+
+# Apply Terraform configuration with GitHub variables
+terraform apply -auto-approve \
+  -var="github_org=$GITHUB_ORG" \
+  -var="github_repo=$GITHUB_REPO"
 
 echo "Bootstrap process completed successfully!"
