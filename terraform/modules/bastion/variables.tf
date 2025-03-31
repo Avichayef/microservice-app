@@ -13,7 +13,7 @@ variable "public_subnet_id" {
   type        = string
 }
 
-variable "ami_id" {
+variable "bastion_ami_id" {
   description = "AMI ID for bastion host"
   type        = string
   default     = null  # Will be looked up if not provided

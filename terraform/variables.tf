@@ -152,10 +152,11 @@ variable "log_retention_days" {
   default     = 30
 }
 
-variable "ecs_task_role_arn" {
-  description = "ARN of the ECS task role"
-  type        = string
-}
+# Remove or comment out this variable since it's provided by the security module
+# variable "ecs_task_role_arn" {
+#   description = "ARN of the ECS task role"
+#   type        = string
+# } 
 
 variable "enable_waf" {
   description = "Enable WAF for ALB"
