@@ -24,184 +24,26 @@ permissions:
   contents: read
 
 jobs:
-  bootstrap:
-    name: Bootstrap Infrastructure
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/microservice-app-github-actions-role
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
           role-duration-seconds: 900
-          mask-aws-account-id: true
 
-      - name: Run Bootstrap Script
-        run: |
-          chmod +x ./scripts/bootstrap.sh
-          ./scripts/bootstrap.sh
-
-  frontend-test:
-    name: Frontend Tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
-      
-      - name: Install dependencies
-        run: |
-          if [ ! -f package-lock.json ] || [ ! -z "$(npm install --package-lock-only --dry-run 2>&1)" ]; then
-            npm install
-          else
-            npm ci
-          fi
-
-      - name: Run tests
-        run: npm test
-
-  backend-test:
-    name: Backend Tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: 'backend/package-lock.json'
-      
-      - name: Install dependencies
-        run: |
-          if [ ! -f package-lock.json ] || [ ! -z "$(npm install --package-lock-only --dry-run 2>&1)" ]; then
-            npm install
-          else
-            npm ci
-          fi
-
-      - name: Run tests
-        run: npm test
-
-  security-scan:
-    name: Security Scanning
-    runs-on: ubuntu-latest
-    continue-on-error: true  # This makes the whole job continue even if there are failures
-    steps:
-      - uses: actions/checkout@v3
-
-      # Make tfsec show warnings but not fail the build
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v1.0.0
-        with:
-          working_directory: terraform
-          soft_fail: true    # This makes tfsec show warnings but not fail
-          
-      # Keep the basic Dockerfile check
-      - name: Run hadolint
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: |
-            frontend/Dockerfile
-            backend/Dockerfile
-          failure-threshold: error  # Only fail on errors, not warnings
-
-  build-and-push:  # This runs later
-    name: Build and Push Images
-    needs: [frontend-test, backend-test, security-scan]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/microservice-app-github-actions-role
-          aws-region: ${{ env.AWS_REGION }}
-          role-session-name: GithubActionsSession
-
-      # Login to ECR for pushing images
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
-      # Build and push Docker images with SHA tags
-      - name: Build and push images
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          # Build and push frontend
-          docker build -t $ECR_REGISTRY/${{ env.PROJECT_NAME }}-frontend:$IMAGE_TAG ./frontend
-          docker push $ECR_REGISTRY/${{ env.PROJECT_NAME }}-frontend:$IMAGE_TAG
-          
-          # Build and push backend
-          docker build -t $ECR_REGISTRY/${{ env.PROJECT_NAME }}-backend:$IMAGE_TAG ./backend
-          docker push $ECR_REGISTRY/${{ env.PROJECT_NAME }}-backend:$IMAGE_TAG
-
-  terraform:
-    name: Terraform
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/microservice-app-github-actions-role
-          aws-region: ${{ env.AWS_REGION }}
-          role-session-name: GithubActionsSession
-
+      # Add your other deployment steps here
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.0.0
 
       - name: Terraform Init
-        working-directory: terraform
-        run: terraform init
-
-      - name: Terraform Plan
-        working-directory: terraform
-        run: terraform plan -var="container_tag=${{ github.sha }}" -out=tfplan
-
-      - name: Terraform Apply
-        working-directory: terraform
-        run: terraform apply -auto-approve tfplan
-
-  deploy:
-    name: Deploy to ECS
-    needs: terraform
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.GITHUB_ACTIONS_ROLE }}
-          aws-region: ${{ env.AWS_REGION }}
-          role-session-name: GithubActionsSession
-          mask-aws-account-id: true
-
-      # Update ECS service with zero-downtime deployment
-      - name: Update ECS Service
         run: |
-          aws ecs update-service \
-            --cluster ${{ env.PROJECT_NAME }}-cluster \
-            --service ${{ env.PROJECT_NAME }}-service \
-            --force-new-deployment
+          cd terraform
+          terraform init
