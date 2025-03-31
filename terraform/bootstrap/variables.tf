@@ -20,11 +20,11 @@ variable "state_lock_table_name" {
 }
 
 variable "github_org" {
-  description = "GitHub organization name"
   type        = string
+  description = "GitHub organization or username"
 }
 
 variable "github_repo" {
-  description = "GitHub repository name"
   type        = string
+  description = "GitHub repository name"
 }

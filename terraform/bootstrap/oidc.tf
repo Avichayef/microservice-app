@@ -23,10 +23,7 @@ resource "aws_iam_role" "github_actions" {
             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
           }
           StringLike = {
-            "token.actions.githubusercontent.com:sub": [
-              "repo:${var.github_org}/*:*",
-              "repo:${var.github_org}/*:ref:refs/heads/main"
-            ]
+            "token.actions.githubusercontent.com:sub": "repo:${var.github_org}/${var.github_repo}:*"
           }
         }
       }
@@ -34,62 +31,8 @@ resource "aws_iam_role" "github_actions" {
   })
 }
 
-# Instead of using the full access policy, create a specific ECR policy
-resource "aws_iam_role_policy" "ecr_access" {
-  name = "ecr-access"
-  role = aws_iam_role.github_actions.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:GetRepositoryPolicy",
-          "ecr:DescribeRepositories",
-          "ecr:ListImages",
-          "ecr:DescribeImages",
-          "ecr:BatchGetImage",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:PutImage"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-# Keep the ECS policy attachment
-resource "aws_iam_role_policy_attachment" "github_actions_ecs" {
+# Add required permissions for the role
+resource "aws_iam_role_policy_attachment" "github_actions_policy" {
   role       = aws_iam_role.github_actions.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
-}
-
-# Keep your existing terraform access policy
-resource "aws_iam_role_policy" "terraform_access" {
-  name = "terraform-access"
-  role = aws_iam_role.github_actions.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:*",
-          "dynamodb:*",
-          "ec2:*",
-          "iam:*",
-          "logs:*",
-          "elasticloadbalancing:*"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess" # Adjust permissions as needed
 }
