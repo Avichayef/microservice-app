@@ -57,10 +57,23 @@ jobs:
       - name: Terraform Plan
         run: |
           cd terraform
-          terraform plan -var="project_name=${{ env.PROJECT_NAME }}" \
-                        -var="aws_region=${{ env.AWS_REGION }}" \
-                        -var="environment=prod" \
-                        -out=tfplan
+          # Enable debug output
+          export TF_LOG=DEBUG
+          
+          terraform plan \
+            -var="project_name=${{ env.PROJECT_NAME }}" \
+            -var="aws_region=${{ env.AWS_REGION }}" \
+            -var="environment=prod" \
+            -var="container_image=microservice-app:latest" \
+            -var="container_tag=latest" \
+            -var="task_cpu=256" \
+            -var="task_memory=512" \
+            -var="service_desired_count=1" \
+            -var="backend_port=4000" \
+            -var="database_url=${{ secrets.DATABASE_URL }}" \
+            -var="api_key=${{ secrets.API_KEY }}" \
+            -var="jwt_secret=${{ secrets.JWT_SECRET }}" \
+            -out=tfplan
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
