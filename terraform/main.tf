@@ -8,6 +8,13 @@
 # - Security Groups and IAM Roles
 # - Secrets Management
 
+data "aws_caller_identity" "current" {}
+
+locals {
+  github_org  = "your-org-name"    # Same as in github_oidc module
+  github_repo = "your-repo-name"   # Same as in github_oidc module
+}
+
 module "networking" {
   source = "./modules/networking"
 
@@ -41,9 +48,9 @@ module "security" {
 
   project_name   = var.project_name
   secrets_arn    = module.secrets.secret_arn
-  aws_account_id = var.aws_account_id
-  github_org     = var.github_org
-  github_repo    = var.github_repo
+  aws_account_id = data.aws_caller_identity.current.account_id
+  github_org     = local.github_org
+  github_repo    = local.github_repo
 }
 
 module "bastion" {
@@ -54,7 +61,7 @@ module "bastion" {
   public_subnet_id    = module.networking.public_subnet_ids[0]
   allowed_ip          = var.bastion_allowed_ip
   key_name            = var.ssh_key_name
-  instance_profile_name = module.security.bastion_instance_profile_name
+  instance_profile_name = aws_iam_instance_profile.bastion.name
 }
 
 module "alb" {
