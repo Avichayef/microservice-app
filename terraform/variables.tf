@@ -56,7 +56,7 @@ variable "task_cpu" {
   default     = 256
 
   validation {
-    condition     = contains([256, 512, 1024, 2048, 4096], var.task_cpu)
+    condition     = contains([256, 512, 1024, 2048, 4096], tonumber(var.task_cpu))
     error_message = "Task CPU must be one of: 256, 512, 1024, 2048, or 4096."
   }
 }
