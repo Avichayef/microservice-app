@@ -23,20 +23,15 @@ env:
   GITHUB_ACTIONS_ROLE: "microservice-app-github-actions-role"
 
 permissions:
-  id-token: write   # Required for OIDC
-  contents: read    # Required for checkout
+  id-token: write
+  contents: read
 
 jobs:
-  bootstrap:  # This runs first
+  bootstrap:
     name: Bootstrap Infrastructure
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -44,7 +39,6 @@ jobs:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/microservice-app-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GithubActionsSession
-          mask-aws-account-id: true
 
       - name: Run Bootstrap Script
         run: |
